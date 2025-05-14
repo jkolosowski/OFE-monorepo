@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "npmClient": "npm",
+  "packages": ["packages/*"],
+  "version": "independent",
+  "command": {
+    "version": {
+      "createRelease": "github",
+      "conventionalCommits": true,
+      "allowBranch": ["master", "main"],
+      "message": "chore(release): publish"
+    }
+  }
+}

@@ -1,0 +1,63 @@
+name: Checks
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+env:
+  AWS_CA_TOKEN: ${{ secrets.AWS_CA_TOKEN }}
+  AWS_CA_REGION: eu-central-1
+  AWS_CA_DOMAIN: przeprogramowani-ofe
+  AWS_CA_REPOSITORY: przeprogramowani-opanuj-frontend
+  AWS_CA_DOMAIN_OWNER: 438634852085
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_CA_REGION }}
+
+    - name: Refresh AWS CodeArtifact Token (if needed)
+      uses: ./.github/actions/refresh-token
+      with:
+        gh-token: ${{ secrets.GH_REPO_ACCESS_TOKEN }}
+        ca-token-expiration-time: ${{ secrets.AWS_CA_TOKEN_EXPIRATION_TIME }}
+        ca-domain: ${{ env.AWS_CA_DOMAIN }}
+        ca-domain-owner: ${{ env.AWS_CA_DOMAIN_OWNER }}
+
+    - name: Setup npm registry
+      run: |
+        REGISTRY_BASE_URL="${{ env.AWS_CA_DOMAIN }}-${{ env.AWS_CA_DOMAIN_OWNER }}.d.codeartifact.${{ env.AWS_CA_REGION }}.amazonaws.com/npm/${{ env.AWS_CA_REPOSITORY }}/"
+        npm config set registry "https://$REGISTRY_BASE_URL"
+        npm set "//$REGISTRY_BASE_URL:_authToken=${{ env.AWS_CA_TOKEN }}"
+
+    - name: Install dependencies
+      run: |
+        npm ci
+
+    - name: Lint packages
+      run: |
+        npm run lint
+
+    - name: Build packages
+      run: |
+        npm run build
+
+    - name: Test packages
+      run: |
+        npm run test
