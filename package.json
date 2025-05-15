@@ -18,6 +18,8 @@
     "webdriverio": "9.13.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@nx/js": "18.2.4",
     "@nx/storybook": "^18.2.4",
     "@nx/vite": "^21.0.3",
